@@ -4,6 +4,35 @@
   
     
     <entry>
+      <title>macOS conda配置StanfordCoreNLP实现NER</title>
+      <link href="/2022/09/04/stanfordcorenlp/"/>
+      <url>/2022/09/04/stanfordcorenlp/</url>
+      
+        <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>​        不知道大家是不是和我使用macOS感受一样，装个库问题百出，网上教程还少，stanfordcorenlp就是这些刺头之一，虽然麻烦但是通过努力也算是成功实现了我起初的目的，在此记录一下。</p><p>​        首先介绍一下stanfordcorenlp，它是一个自然语言处理工具包，其集成了很多非常实用的功能，包括分词，词性标注，句法分析等等。它就是把训练好的模型封装起来，方便大家的使用，实际上可以类比为一个软件。目前市面上有不少类似的工具，结巴分词、清华、哈工大等等。</p><p>​        那么我为什么选择stanfordcorenlp呢？理由网上给了三点，我给出一点：</p><ol><li><p>功能足够多，一站式解决所有主流需求；</p></li><li><p>操作足够方便，放到 Python 里基本上就是一两行代码；</p></li><li><p>语言支持广泛，目前支持阿拉伯语，中文，英文，法语，德语，西班牙语，做平行语料的对比非常方便；</p></li><li><p>我自身体验下来，最后关键一点，运行快。</p></li></ol><h2 id="个人电脑配置"><a href="#个人电脑配置" class="headerlink" title="个人电脑配置"></a>个人电脑配置</h2><ol><li>系统：macOS Monterey</li><li>conda环境，python3.9</li><li>java version “17.0.2”，无java环境需提前配置java环境</li></ol><h2 id="配置步骤"><a href="#配置步骤" class="headerlink" title="配置步骤"></a>配置步骤</h2><ol><li>安装stanfordcorenlp库</li></ol><p>​        这里通过实测，推荐使用pip进行安装，虚拟环境没有pip的先安装pip，安装代码如下：</p><figure class="highlight bash"><table><tr><td class="code"><pre><span class="line">pip install stanfordcorenlp==3.8.0.1</span><br></pre></td></tr></table></figure><p>​       一定要设置版本号，默认版本为3.9，在后续测试中存在问题，推荐3.8.0.1版本。安装成功后，在虚拟环境site-packages中存在stanfordcorenlp文件夹，其中包含一个corenlp.py文件，步骤4需要。</p><ol start="2"><li>下载StanfordCoreNLP文件及中文模型jar包</li></ol><p>​        前往官网下载两个文件，经过本人测试最新版本在后续配置中存在问题，这里推荐为3.9.0版本，版本发布日期为2018-01-31，并下载中文jar包，如下所示：</p><p><img src="https://s2.loli.net/2022/09/04/X1W9GialsgqjNE4.png" alt="下载界面.png"></p><p><a href="https://stanfordnlp.github.io/CoreNLP/history.html">CoreNLP文件及模型jar包下载地址</a></p><ol start="3"><li>配置文件</li></ol><p>​       两个文件下载好后，你将得到两个文件，stanford-corenlp-full-2018-01-31.zip以及stanford-chinese-corenlp-2018-01-31-models.jar，对于zip文件需要解压放入任意文件夹，然后把模型jar包放入解压后的stanford-corenlp-full-2018-01-31文件夹中。</p><ol start="4"><li>代码实现NER</li></ol><p>​        以上StanfordCoreNLP算是配置好了，这个时候我们还需要去步骤1中的corenlp.py文件中84，85行代码注释掉，如下：</p><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="comment"># Check if the port is in use</span></span><br><span class="line"><span class="keyword">if</span> self.port <span class="keyword">in</span> [conn.laddr[<span class="number">1</span>] <span class="keyword">for</span> conn <span class="keyword">in</span> psutil.net_connections()]:</span><br><span class="line">    <span class="keyword">raise</span> IOError(<span class="string">&#x27;Port &#x27;</span> + <span class="built_in">str</span>(self.port) + <span class="string">&#x27; is already in use.&#x27;</span>)</span><br></pre></td></tr></table></figure><p>​       以上就可以实现NER了测试demo如下</p><figure class="highlight python"><table><tr><td class="code"><pre><span class="line"><span class="keyword">from</span> stanfordcorenlp <span class="keyword">import</span> StanfordCoreNLP</span><br><span class="line"><span class="comment"># 修改stanford-corenlp-full-2018-01-31所在的path，port一定要写</span></span><br><span class="line">zh_model = StanfordCoreNLP(<span class="string">r&#x27;/your_path/stanford-corenlp-full-2018-01-31&#x27;</span>, lang=<span class="string">&#x27;zh&#x27;</span>,port=<span class="number">9999</span>)</span><br><span class="line">sentence = <span class="string">&quot;我在福建，我爱中国&quot;</span></span><br><span class="line"><span class="comment"># 分词</span></span><br><span class="line"><span class="built_in">print</span>(zh_model.word_tokenize(sentence))</span><br><span class="line"><span class="comment"># 词性标注</span></span><br><span class="line"><span class="built_in">print</span>(zh_model.pos_tag(sentence))</span><br><span class="line"><span class="comment"># NER</span></span><br><span class="line"><span class="built_in">print</span>(zh_model.ner(sentence))</span><br></pre></td></tr></table></figure><p>​        结果如下图所示：</p><p><img src="https://s2.loli.net/2022/09/04/gnGdpUHBQtcIT3K.png" alt="截屏2022-09-04 23.53.53.png"></p><h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>​        该博客为个人学习使用，欢迎大家在主页关注我的git-hub，欢迎大家多多交流关注，如有问题欢迎邮件！</p><p><img src="https://s2.loli.net/2022/09/05/lC4RcV3pZDEh8Ff.png" alt="截屏2022-09-04 23.59.18.png"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> conda配置 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> macOS </tag>
+            
+            <tag> conda </tag>
+            
+            <tag> NER </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>helloworld</title>
       <link href="/2022/08/28/helloworld/"/>
       <url>/2022/08/28/helloworld/</url>
